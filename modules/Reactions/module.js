@@ -32,7 +32,6 @@ exports.MainClass = class Reactions extends Module {
         if(message.deleted)
             return;
 
-            console.log('a');
         message.react(emojiName)
             .catch(err => {
                 this.log('Notice', 'Fail', 'Reaction', err);

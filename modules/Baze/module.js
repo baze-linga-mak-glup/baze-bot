@@ -368,6 +368,8 @@ class WordCommand {
         if(!this.isWordRemoved)
             this.dictData.addWord(this.spelling, this.wordData);
 
+        this.dictData.saveToData();
+
         this.mod_messages.send(this.cmdChannel, {
             embed: {
                 description: '変更を保存しました。'
@@ -404,7 +406,7 @@ exports.MainClass = class Baze extends Module {
     }
 
     initDictionaryFile() {
-        this.dictFilePath = './modules/BOT/dict.txt';
+        this.dictFilePath = './modules/Baze/dict.txt';
         this.dictFile = this.mod_files.load(this.dictFilePath, '');
 
         DictionaryData.getFromFile(this, this.dictFile)
@@ -417,7 +419,7 @@ exports.MainClass = class Baze extends Module {
 
 class DictionaryData {
     constructor(textData) {
-        this.textData = textData;
+        this.originalTextData = textData;
         this.objData = this.toObject();
     }
 
@@ -449,7 +451,7 @@ class DictionaryData {
 
     toObject() {
         let words = {};
-        let lines = this.textData.split('\n');
+        let lines = this.originalTextData.split('\n');
 
         let latestSpelling = '';
         let latestClass = '';
@@ -496,6 +498,34 @@ class DictionaryData {
         return { words: words };
     }
 
+    toText() {
+        let result = '';
+
+        Object.keys(this.objData.words).forEach(spelling => {
+            let word = this.objData.words[spelling];
+            let transEachClasses = {};
+            result += '\n#' + spelling + '\n';
+
+            word.translation.forEach(trans => {
+                if(!(trans.class in transEachClasses))
+                    transEachClasses[trans.class] = [];
+
+                transEachClasses[trans.class].push(trans);
+            });
+
+            Object.keys(transEachClasses).forEach(className => {
+                let transList = transEachClasses[className];
+                result += '\n@' + className + '\n';
+
+                transList.forEach(trans => {
+                    result += trans.type + '|' + trans.words.join(',') + '\n';
+                });
+            });
+        });
+
+        return result;
+    }
+
     static getIPANotation(spelling) {
         return '[' + spelling + ']';
     }
@@ -503,13 +533,18 @@ class DictionaryData {
     static getNewWordObject(spelling) {
         return {
             ipa: DictionaryData.getIPANotation(spelling),
-            spelling: spelling,
             translation: []
         };
     }
 
     getWord(spelling) {
         return this.objData.words[spelling];
+    }
+
+    saveToData() {
+        let content = this.toText();
+        console.log(content);
+        //this.dictFile = this.mod_files.write(this.dictFilePath, content);
     }
 
     removeWord(spelling) {
