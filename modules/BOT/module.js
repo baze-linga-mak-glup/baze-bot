@@ -165,7 +165,7 @@ exports.MainClass = class BOT extends Module {
         let modIndex = 0;
         let modNames = Module.getModuleNames();
 
-        this.log('Event', 'Start', 'Loading all modules');
+        this.log('Event', 'Loading', 'All modules');
 
         // ロードの制限時間を設ける (10秒)
         let timeout = setTimeout(() => {
@@ -177,6 +177,7 @@ exports.MainClass = class BOT extends Module {
             // 全モジュールインスタンスのready()を呼び出す
             Object.values(this.modules).forEach(instance => {
                 try {
+                    instance.log('Event', 'Readying', 'A module instance');
                     instance.ready();
                 } catch(e) {
                     instance.log('Error', 'Ready', 'A module source', e.message.split('\n')[0]);
@@ -192,7 +193,6 @@ exports.MainClass = class BOT extends Module {
         modNames.forEach(name => {
             try {
                 modIndex++;
-
                 let mod = require('../' + name + '/module.js');
 
                 // モジュール名が既に存在する場合は弾く
@@ -201,6 +201,8 @@ exports.MainClass = class BOT extends Module {
 
                 // BOTモジュールの場合はthisを、そうでない場合は新たに生成したインスタンスを使用する
                 let instance = name == this.moduleName ? this : new mod.MainClass();
+
+                instance.log('Event', 'Loading', 'A module instance');
 
                 // モジュール名(フォルダ名)とクラス名が異なる場合はエラー
                 if(name != instance.moduleName) {
